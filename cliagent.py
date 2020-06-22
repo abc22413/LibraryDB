@@ -32,6 +32,7 @@ def start_cli():
     main_option=show_menu([
       "Quit",
       "Manage Account & Loans",
+      "Browse Books",
       "Administer Library"
     ])
 
@@ -84,6 +85,14 @@ def start_cli():
             elif ret_option==2:
               pass
   
+    #Choose to browse
+    elif main_option==3:
+      pass
+
+    #Choose to administer library
+    elif main_option==4:
+      pass
+
   #End of program
   print("Thank you for visiting ABC Libary")
   print("Session ended {}".format(datetime.now().strftime("%d %B %Y %H:%M:%S")))
