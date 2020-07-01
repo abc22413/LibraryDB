@@ -16,6 +16,9 @@ def show_menu(options):
   while True:
     try:
       option = int(input("Option: "))
+      if option not in [i for i in range(1,len(options)+1)]:
+        #raise RangeError
+        pass
     except ValueError:
       print("Not an integer selection. Please try again")
       continue
