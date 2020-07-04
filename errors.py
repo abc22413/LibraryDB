@@ -8,3 +8,8 @@ class OptionOutOfRange(Error):
     """Raised when option selected from menu is out of range
     """
     pass
+
+class DBConnectionError(Error):
+    """Raised when option selected from menu is out of range
+    """
+    pass

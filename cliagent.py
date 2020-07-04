@@ -32,9 +32,31 @@ def show_menu(options, command="\n\n\nChoose an option below"):
       continue
   return option
 
-def start_cli():
+def get_search_param():
+  print("\nNew Search")
+  title = str(input("Title: "))
+  author = str(input("Author: "))
+  isbn = str(input("ISBN: "))
+
+  #Handle integer input gathering
+  while True:
+    try:
+      num_results = int(input("How many results to display? "))
+      break
+    except TypeError:
+      if num_results=="":
+        num_results = None
+        break
+      print("Please enter integer value")
+
+  return title, author, isbn, num_results
+
+def start_cli(client):
+  #Supplies mongodb client
+  client = client
   show_welcome()
   time.sleep(2)
+
   #mainloop
   while True:
     main_option = show_menu([
@@ -57,12 +79,31 @@ def start_cli():
           "Return to previous",
           "New search"
         ])
+
         #Return
         if option==1:
           break
+
         #New Search
         elif option==2:
-          pass
+          search_start = time.time()
+          title, author, isbn, num_results = get_search_param()
+          if num_results:
+            results = get_books(client, title, author, isbn, num_results)
+          else:
+            results = get_books(client, title, author, isbn, num_results)
+          #Print results
+          print("{0} results in {1}ms".format(
+            len(results),
+            time.time()-search_start
+          ))
+          print("Title | Author(s) | Availability")
+          for book in results:
+            print("{0} | {1} | {2}".format(
+              book["title"],
+              book["authors"],
+              book["avail"]
+            ))
 
     #Check Loans
     elif main_option==3:
