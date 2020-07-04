@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-__pycache__/
+/__pycache__/
 *.py[cod]
 *$py.class
 
@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 #VSCODE
-.vscode/
+/.vscode/
 
 #Mac Files
 .DS_Store/
