@@ -6,10 +6,6 @@ from pymongo import *
 def create_book(client):
   pass
 
-def get_books(client, title, author, isbn, num_results=10):
-  collection = client.Library.Books
-  return collection.find({"title": {"$regex": title}},{"_id":0, "pgs":0, "isbn": 0}).limit(num_results)
-
 def update_book(client):
   pass
 
@@ -44,5 +40,3 @@ def return_loan(client):
 
 def past_loans(client):
   pass
-
-print(get_books("", "", ""))
