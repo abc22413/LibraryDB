@@ -1,7 +1,5 @@
 from cliagent import *
-import dns
 import secret
-from pymongo import *
 from errors import *
 
 if __name__ == "__main__":
@@ -9,10 +7,10 @@ if __name__ == "__main__":
   try:
     #Welcome message
     show_welcome()
-    time.sleep(1.5)
+    time.sleep(1)
 
     #Connect to DB
-    client = MongoClient("mongodb+srv://john:john@cluster0.yyt0d.mongodb.net/Library?retryWrites=true&w=majority")
+    client = MongoClient("mongodb+srv://{0}:{1}@cluster0.yyt0d.mongodb.net/Library?retryWrites=true&w=majority".format(secret.username, secret.password))
     if not client.Library.test:
       raise DBConnectionError
 

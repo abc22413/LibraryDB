@@ -1,4 +1,3 @@
-from classes import *
 from errors import *
 from dbhandler import *
 from datetime import datetime
@@ -9,7 +8,6 @@ def show_welcome():
   print("Current Time {0}".format(datetime.now().strftime("%d %B %Y %H:%M:%S")))
 
 def show_menu(options, command="\n\n\nChoose an option below"):
-  options = options
   print(command)
   for x in options:
     print("{0}) {1}".format(
@@ -33,27 +31,24 @@ def show_menu(options, command="\n\n\nChoose an option below"):
       continue
   return option
 
-def get_search_param():
-  print("\nNew Search")
-  title = str(input("Title: "))
-  author = str(input("Author: "))
-  isbn = str(input("ISBN: "))
-  num_results = None
-
-  #Handle integer input gathering
-  while True:
+def get_param(options, command="\nPlease supply the following"):
+  results=[]
+  for option in options.keys():
+    temp=None
     try:
-      num_results = int(input("How many results to display? "))
+      if options[option]==int:
+        temp = int(input("{}: ".format(option)))
+      elif options[option]==str:
+        temp = str(input("{}: ".format(option)))
+      results.append(temp)
       break
-    except ValueError:
-      if num_results==None:
-        num_results = None
+    except:
+      if temp in [None, '']:
+        results.append(temp)
         break
       else:
-        print("Please enter integer value")
-        continue
-
-  return title, author, isbn, num_results
+        print("Invalid {} supplied. Please try again.".format(option))
+  return results
 
 def start_cli(client):
   #Supplies mongodb client
@@ -79,7 +74,8 @@ def start_cli(client):
       while True:
         option = show_menu([
           "Return to previous",
-          "New search"
+          "New search",
+          "View book details"
         ])
 
         #Return
@@ -87,12 +83,19 @@ def start_cli(client):
           break
 
         #New Search
+        #TODO: Sorting
         elif option==2:
-          search_start = time.time()
-          title, author, isbn, num_results = get_search_param()
-          if not num_results:
-            num_results = 10
-          input("Press Enter to continue")
+          results = get_param({
+            "Title":str,
+            "Author":str,
+            "ISBN":str,
+            "Number of results":int,
+          },"\nNew search")
+          [title, author, isbn, num_results] = results
+          results = get_books(client, title, author, isbn, num_results)
+
+        elif option==3:
+          title, author, isbn, x = get_search_param()
 
     #Check Loans
     elif main_option==3:
@@ -120,9 +123,9 @@ def start_cli(client):
       while True:
         option = show_menu([
           "Return to previous",
-          "Borrow Book(s)",
-          "Renew Book(s)",
-          "Return Book(s)",
+          "Borrow Book",
+          "Renew Book",
+          "Return Book",
           "Check book loaner",
         ])
 
