@@ -25,7 +25,7 @@ def create_book(client, new_book):
       continue
     finally:
       input("Press Enter to continue")
-
+#TODO: Remove the finally and shift to main code
 def get_books(client, title, author, isbn, num_results, sort, direction):
   sorting = ["_id","title", "author", "isbn", "pgs"]
   try:
@@ -90,11 +90,11 @@ def get_one_book(client, book_id):
     print("Length: {} pages".format(book["pgs"]))
     print("ISBN: {}".format(book["isbn"]))
     print("Book ID: {}".format(book["_id"]))
-    input("Press Enter to continue\n")
-    return book
   except:
     print("Failed to retrieve such book")
-    return None
+  finally:
+    input("Press Enter to continue\n")
+    return book
 
 def update_book(client, old, new):
   try:

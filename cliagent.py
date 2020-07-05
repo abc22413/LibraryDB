@@ -5,6 +5,9 @@ from datetime import datetime
 import time
 import copy
 
+#Commands which indicate yes for "y/n" prompts
+AFFIRMATIVE = ["y","yes","yeah","sure","yep","yup","ye","ya"]
+
 def show_welcome():
   print("\n\n\nWELCOME TO ABC LIBRARY")
   print("Current Time {0}".format(datetime.now().strftime("%d %B %Y %H:%M:%S")))
@@ -204,7 +207,7 @@ def start_cli(client):
           author_count=1
           while True:
             authors.append(input("Author {}: ".format(author_count)))
-            if str(input("Add another author? (y/n) ")).lower() not in ["y","yes","yeah","sure","yep","yup"]:
+            if str(input("Add another author? (y/n) ")).lower() not in AFFIRMATIVE:
               break
             author_count+=1
           new_book = {
@@ -254,11 +257,42 @@ def start_cli(client):
                 field,
                 book[field],
                 response
-              ))).lower() in ["y","yes","yeah"]:
+              ))).lower() in AFFIRMATIVE:
                 new_book[field] = response
 
             elif edit_option==6:
-              pass         
+              new_authors = copy.deepcopy(new_book["authors"])
+              while True:
+                author_option = show_menu(["Discard changes & Return", "Commit changes & Return"]+new_authors, "\nChoose author to edit")
+
+                #Discard and Return
+                if author_option==1:
+                  break
+
+                #Commit and Return
+                elif author_option==2:
+                  new_book["authors"]=new_authors
+
+                elif author_option in range(2, len(new_authors)+2):
+                  author = new_authors[author_option-2]
+                  while True:
+                    new_author = str(input("Replace {} with: ".format(author)))
+                    if str(input("Confirm changing '{1}' to '{2}'? (y/n): ".format(
+                      author,
+                      new_author
+                    ))).lower() in AFFIRMATIVE:
+                      if new_author!='':
+                        new_authors[author_option-2] = new_author
+                      else:
+                        new_authors.pop(author_option-2)
+                      break
+                    
+              if str(input("Confirm changing {0} from '{1}' to '{2}'? (y/n): ".format(
+                field,
+                book[field],
+                response
+              ))).lower() in ["y","yes","yeah"]:
+                new_book[field] = response         
               
         #Remove book
         elif option==4:
