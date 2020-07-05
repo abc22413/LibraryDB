@@ -92,7 +92,6 @@ def start_cli(client):
           break
 
         #New Search
-        #TODO: Sorting
         elif option==2:
           [title, author, isbn, num_results] = get_param({
             "Title":str,
@@ -192,8 +191,33 @@ def start_cli(client):
 
         #Add book
         elif option==2:
-          pass
-        
+          [title, isbn, pgs] = get_param({
+            "Title":str,
+            "ISBN":str,
+            "# of pages":int
+          }, "Supply the following")
+          authors=[]
+          author_count=1
+          while True:
+            authors.append(input("Author {}: ".format(author_count)))
+            if str(input("Add another author? (y/n) ")).lower() not in ["y","yes","yeah","sure","yep","yup"]:
+              break
+            author_count+=1
+          new_book = {
+            "_id": None,
+            "title": title,
+            "authors": authors,
+            "avail": True,
+            "pgs": pgs,
+            "isbn": isbn
+          }
+          try:
+            create_book(client, new_book)
+          except:
+            print("Creation failed")
+          finally:
+            input("Press Enter to continue")
+
         #Edit book
         elif option==3:
           pass

@@ -1,17 +1,23 @@
 import dns
 import secret
+import random
 from pymongo import *
 
 #Books
 def create_book(client, new_book):
-  client, new_book = client, new_book
-  try:
-    new_id = client.Library.Books.insert_one(new_book).inserted_id
-    print("Success! {0} was added with ID {1}".format(new_book["title"], new_id))
-  except:
-    print("Failed to insert book")
-  finally:
-    input("Press Enter to continue")
+  retry = 0
+  #For around 6000 books, 41 ensures 1 in a billion chance of failure
+  while retry<41:
+    try:
+      retry+=1
+      success = client.Library.test.insert_one(new).inserted_id
+      print(success)
+      break
+    except:
+      new["_id"] = str(random.randint(1,99999)).zfill(5)+new["authors"][0].replace(" ","")[:3].upper()
+      continue
+    finally:
+      input("Press Enter to continue")
 
 def get_books(client, title, author, isbn, num_results, sort, direction):
   sorting = ["_id","title", "author", "isbn", "pgs"]

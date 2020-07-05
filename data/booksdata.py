@@ -22,6 +22,6 @@ with open("./data/books.csv","r") as f:
       count+=1
     except:
       print(line)
-  newfile = open("./data/data.json", "w")
+  newfile = open("./data/books.json", "w")
   json.dump(data, newfile)
   newfile.close()
