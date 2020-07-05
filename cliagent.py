@@ -1,3 +1,4 @@
+#Handle Front and middle of application: CLI and processing
 from errors import *
 from dbhandler import *
 from datetime import datetime
@@ -33,6 +34,7 @@ def show_menu(options, command="\n\n\nChoose an option below"):
 
 def get_param(options, command="\nPlease supply the following"):
   results=[]
+  print(command)
   for option in options.keys():
     while True:
       if options[option]==str:
@@ -211,20 +213,56 @@ def start_cli(client):
             "pgs": pgs,
             "isbn": isbn
           }
-          try:
-            create_book(client, new_book)
-          except:
-            print("Creation failed")
-          finally:
-            input("Press Enter to continue")
+          create_book(client, new_book)
 
         #Edit book
         elif option==3:
-          pass
+          [book_id]=get_param({"Book ID":str},"\nSupply Book ID")
+          book = get_one_book(client, book_id)
+          if book==None:
+            continue
+          #Create editing copy
+          new_book = book
+          while True:
+            edit_option=show_menu([
+              "Discard changes & Quit",
+              "Commit changes & Quit",
+              "Edit Title",
+              "Edit #of pages",
+              "Edit ISBN",
+              "Edit Author(s)"
+            ])
+            #Discard changes
+            if edit_option==1:
+              print("Exiting editor mode")
+              break
 
+            #Commit changes
+            elif edit_option==2:
+              update_book(client, book, new_book)
+              print("Exiting editor mode")
+              break
+            
+            elif edit_option in range(3,6):
+              editing = ["title", "pgs", "isbn"]
+              field = editing[edit_option-3]
+              [response] = get_param({"New {}".format(field):int if field=="pgs" else str}, "Supply new {0}".format(field))
+              if str(input("Confirm changing '{0}' to '{1}'? (y/n): ".format(
+                book[field],
+                new_book[field]
+              ))).lower() in ["y","yes","yeah"]:
+                new_book[field] = response
+
+            elif edit_option==6:
+              pass         
+              
         #Remove book
         elif option==4:
-          pass
+          book_id=get_param({"Book ID":str},"\nSupply Book ID")
+          try:
+            pass
+          except:
+            pass
 
     #Manage Users
     elif main_option==6:

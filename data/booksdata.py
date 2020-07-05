@@ -1,5 +1,5 @@
+#Populate the database
 import json
-#Populate database
 
 data = []
 with open("./data/books.csv","r") as f:
