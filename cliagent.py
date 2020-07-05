@@ -132,7 +132,7 @@ def start_cli(client):
           },"\nFind book details")
           detail_books(client, title, author, isbn)
 
-    #Check Loans
+    #TODO: Check Loans
     elif main_option==3:
       while True:
         option = show_menu([
@@ -153,7 +153,7 @@ def start_cli(client):
         elif option==3:
           pass
 
-    #Manage Loans
+    #TODO: Manage Loans
     elif main_option==4:
       while True:
         option = show_menu([
@@ -296,11 +296,14 @@ def start_cli(client):
         elif option==4:
           book_id=get_param({"Book ID":str},"\nSupply Book ID")
           try:
-            pass
+            client.Library.Books.delete_one({"_id":book_id})
+            print("Successfully deleted book with book ID {}".format(book_id))
           except:
-            pass
+            print("Failed to delete book with book ID {}".format(book_id))
+          finally:
+            input("Press Enter to continue")
 
-    #Manage Users
+    #TODO: Manage Users
     elif main_option==6:
       while True:
         option = show_menu([
