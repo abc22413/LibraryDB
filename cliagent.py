@@ -43,22 +43,24 @@ def get_param(options, command="\nPlease supply the following"):
     while True:
       if options[option]==str:
         try:
+          temp=""
           temp = str(input("{}: ".format(option)))
           results.append(temp)
           break
         except:
-          if temp=='':
+          if temp=="":
             results.append(temp)
             break
           else:
             print("Please input a string for {}".format(option))
       elif options[option]==int:
         try:
+          temp = None
           temp = int(input("{}: ".format(option)))
           results.append(temp)
           break
         except:
-          if temp=='':
+          if temp==None:
             results.append(None)
             break
           else:
@@ -230,8 +232,8 @@ def start_cli(client):
           new_book = copy.deepcopy(book)
           while True:
             edit_option=show_menu([
-              "Discard changes & Quit",
-              "Commit changes & Quit",
+              "Discard changes & Return",
+              "Commit changes & Return",
               "Edit Title",
               "Edit #of pages",
               "Edit ISBN",
@@ -272,27 +274,23 @@ def start_cli(client):
                 #Commit and Return
                 elif author_option==2:
                   new_book["authors"]=new_authors
+                  print("Successfully added modifications to local copy")
+                  input("Press Enter to continue")
+                  break
 
-                elif author_option in range(2, len(new_authors)+2):
-                  author = new_authors[author_option-2]
+                elif author_option in range(3, len(new_authors)+3):
+                  author = new_authors[author_option-3]
                   while True:
                     new_author = str(input("Replace {} with: ".format(author)))
-                    if str(input("Confirm changing '{1}' to '{2}'? (y/n): ".format(
+                    if str(input("Confirm changing '{0}' to '{1}'? (y/n): ".format(
                       author,
                       new_author
                     ))).lower() in AFFIRMATIVE:
                       if new_author!='':
-                        new_authors[author_option-2] = new_author
+                        new_authors[author_option-3] = new_author
                       else:
-                        new_authors.pop(author_option-2)
-                      break
-                    
-              if str(input("Confirm changing {0} from '{1}' to '{2}'? (y/n): ".format(
-                field,
-                book[field],
-                response
-              ))).lower() in ["y","yes","yeah"]:
-                new_book[field] = response         
+                        new_authors.pop(author_option-3)
+                      break    
               
         #Remove book
         elif option==4:
