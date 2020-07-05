@@ -34,20 +34,29 @@ def show_menu(options, command="\n\n\nChoose an option below"):
 def get_param(options, command="\nPlease supply the following"):
   results=[]
   for option in options.keys():
-    temp=None
-    try:
-      if options[option]==int:
-        temp = int(input("{}: ".format(option)))
-      elif options[option]==str:
-        temp = str(input("{}: ".format(option)))
-      results.append(temp)
-      break
-    except:
-      if temp in [None, '']:
-        results.append(temp)
-        break
-      else:
-        print("Invalid {} supplied. Please try again.".format(option))
+    while True:
+      if options[option]==str:
+        try:
+          temp = str(input("{}: ".format(option)))
+          results.append(temp)
+          break
+        except:
+          if temp=='':
+            results.append(temp)
+            break
+          else:
+            print("Please input a string for {}".format(option))
+      elif options[option]==int:
+        try:
+          temp = int(input("{}: ".format(option)))
+          results.append(temp)
+          break
+        except:
+          if temp=='':
+            results.append(None)
+            break
+          else:
+            print("Please input an integer for {}".format(option))
   return results
 
 def start_cli(client):
@@ -85,17 +94,35 @@ def start_cli(client):
         #New Search
         #TODO: Sorting
         elif option==2:
-          results = get_param({
+          [title, author, isbn, num_results] = get_param({
             "Title":str,
             "Author":str,
             "ISBN":str,
             "Number of results":int,
           },"\nNew search")
-          [title, author, isbn, num_results] = results
-          results = get_books(client, title, author, isbn, num_results)
+          num_results = num_results if num_results else 10
+          sort = show_menu([
+            "None",
+            "Title",
+            "Author",
+            "ISBN",
+            "Number of Pages"
+          ],"\nSort by")
+          direction=1
+          if sort!=1:
+            direction = show_menu([
+              "Ascending",
+              "Descending"
+            ], "\nSort in which direction")
+          get_books(client, title, author, isbn, num_results, sort, direction)
 
         elif option==3:
-          title, author, isbn, x = get_search_param()
+          [title, author, isbn] = get_param({
+            "Title":str,
+            "Author":str,
+            "ISBN":str
+          },"\nFind book details")
+          detail_books(client, title, author, isbn)
 
     #Check Loans
     elif main_option==3:
@@ -166,7 +193,7 @@ def start_cli(client):
         #Add book
         elif option==2:
           pass
-
+        
         #Edit book
         elif option==3:
           pass

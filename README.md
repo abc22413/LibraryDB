@@ -1,2 +1,1 @@
-# LibraryDB
-CEP WA2
+#Manual
