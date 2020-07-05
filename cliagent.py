@@ -3,6 +3,7 @@ from errors import *
 from dbhandler import *
 from datetime import datetime
 import time
+import copy
 
 def show_welcome():
   print("\n\n\nWELCOME TO ABC LIBRARY")
@@ -117,6 +118,7 @@ def start_cli(client):
             ], "\nSort in which direction")
           get_books(client, title, author, isbn, num_results, sort, direction)
 
+        #Details View
         elif option==3:
           [title, author, isbn] = get_param({
             "Title":str,
@@ -222,7 +224,7 @@ def start_cli(client):
           if book==None:
             continue
           #Create editing copy
-          new_book = book
+          new_book = copy.deepcopy(book)
           while True:
             edit_option=show_menu([
               "Discard changes & Quit",
@@ -240,16 +242,18 @@ def start_cli(client):
             #Commit changes
             elif edit_option==2:
               update_book(client, book, new_book)
+              input("Press Enter to continue")
               print("Exiting editor mode")
               break
             
             elif edit_option in range(3,6):
               editing = ["title", "pgs", "isbn"]
               field = editing[edit_option-3]
-              [response] = get_param({"New {}".format(field):int if field=="pgs" else str}, "Supply new {0}".format(field))
-              if str(input("Confirm changing '{0}' to '{1}'? (y/n): ".format(
+              [response] = get_param({"New {}".format(field):int if field=="pgs" else str}, "\nSupply new {0}".format(field))
+              if str(input("Confirm changing {0} from '{1}' to '{2}'? (y/n): ".format(
+                field,
                 book[field],
-                new_book[field]
+                response
               ))).lower() in ["y","yes","yeah"]:
                 new_book[field] = response
 

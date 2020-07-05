@@ -1,5 +1,6 @@
 #Handle MongoDB backend queries, searches, sorts
 import dns
+import errors
 import secret
 import random
 from pymongo import *
@@ -83,7 +84,7 @@ def detail_books(client, title, author, isbn):
 
 def get_one_book(client, book_id):
   try:
-    book = client.Library.Books.find_one({"_id":book_id}, {"avail":0})
+    book = client.Library.Books.find_one({"_id":book_id})
     print("\nTitle: {}".format(book["title"]))
     print("Author(s): {}".format(", ".join([i for i in book["authors"]])))
     print("Length: {} pages".format(book["pgs"]))
@@ -98,12 +99,10 @@ def get_one_book(client, book_id):
 def update_book(client, old, new):
   try:
     if old!=new:
-      for field in [i for i in new.keys() if new[i]!=old[i]]:
-        print("OLD: ".format(old[field]))
-        print("NEW: ".format(new[field]))
-      #success = find_one_and_update({"_id":new["_id"]}, {"$set": [{}]})
-      #if success==None:
-      # raise NoModificationError
+      client.Library.Books.find_one_and_replace({"_id":new["_id"]},new)
+      print("Successfully modified")
+    else:
+      print("No modifications done.")
   except:
     print("Error occurred while attempting to modify")
 
