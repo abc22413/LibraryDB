@@ -6,7 +6,7 @@ import time
 import copy
 
 #Commands which indicate yes for "y/n" prompts
-AFFIRMATIVE = ["y","yes","yeah","sure","yep","yup","ye","ya"]
+AFFIRMATIVE = ["y","yes","yeah","sure","yep","yup","ye","ya",""]
 
 def show_welcome():
   print("\n\n\nWELCOME TO ABC LIBRARY")
@@ -247,63 +247,68 @@ def start_cli(client):
             #Commit changes
             elif edit_option==2:
               update_book(client, book, new_book)
-              input("Press Enter to continue")
               print("Exiting editor mode")
               break
             
             elif edit_option in range(3,6):
               editing = ["title", "pgs", "isbn"]
               field = editing[edit_option-3]
-              [response] = get_param({"New {}".format(field):int if field=="pgs" else str}, "\nSupply new {0}".format(field))
-              if str(input("Confirm changing {0} from '{1}' to '{2}'? (y/n): ".format(
-                field,
-                book[field],
-                response
-              ))).lower() in AFFIRMATIVE:
-                new_book[field] = response
+              try:
+                #Check attr exists
+                if field not in new_book.keys():
+                  new_book[field] = None if field=="pgs" else ''
+                [response] = get_param({"New {}".format(field):int if field=="pgs" else str}, "\nSupply new {0}".format(field))
+                if str(input("Confirm changing {0} from '{1}' to '{2}'? (y/n): ".format(
+                  field,
+                  new_book[field],
+                  response
+                ))).lower() in AFFIRMATIVE:
+                  new_book[field] = response
+                
+              finally:
+                input("Press Enter to continue")
 
             elif edit_option==6:
-              new_authors = copy.deepcopy(new_book["authors"])
-              while True:
-                author_option = show_menu(["Discard changes & Return", "Commit changes & Return"]+new_authors, "\nChoose author to edit")
+              try:
+                if "authors" not in new_book.keys():
+                  new_book["authors"]=["New Author"]
+                new_authors = copy.deepcopy(new_book["authors"])
+                while True:
+                  author_option = show_menu(["Discard changes & Return", "Commit changes & Return"]+new_authors, "\nChoose author to edit")
+                  #Discard and Return
+                  if author_option==1:
+                    break
 
-                #Discard and Return
-                if author_option==1:
-                  break
+                  #Commit and Return
+                  elif author_option==2:
+                    new_book["authors"]=new_authors
+                    print("Successfully added modifications to local copy")
+                    break
 
-                #Commit and Return
-                elif author_option==2:
-                  new_book["authors"]=new_authors
-                  print("Successfully added modifications to local copy")
-                  input("Press Enter to continue")
-                  break
+                  #Change an author
+                  elif author_option in range(3, len(new_authors)+3):
+                    author = new_authors[author_option-3]
+                    while True:
+                      new_author = str(input("Replace {} with: ".format(author)))
+                      if str(input("Confirm changing '{0}' to '{1}'? (y/n): ".format(
+                        author,
+                        new_author
+                      ))).lower() in AFFIRMATIVE:
+                        if new_author!='':
+                          new_authors[author_option-3] = new_author
+                        else:
+                          new_authors.pop(author_option-3)
+                        break    
+                
+              finally:
+                input("Press Enter to continue")
 
-                elif author_option in range(3, len(new_authors)+3):
-                  author = new_authors[author_option-3]
-                  while True:
-                    new_author = str(input("Replace {} with: ".format(author)))
-                    if str(input("Confirm changing '{0}' to '{1}'? (y/n): ".format(
-                      author,
-                      new_author
-                    ))).lower() in AFFIRMATIVE:
-                      if new_author!='':
-                        new_authors[author_option-3] = new_author
-                      else:
-                        new_authors.pop(author_option-3)
-                      break    
-              
         #Remove book
         elif option==4:
-          book_id=get_param({"Book ID":str},"\nSupply Book ID")
-          try:
-            client.Library.Books.delete_one({"_id":book_id})
-            print("Successfully deleted book with book ID {}".format(book_id))
-          except:
-            print("Failed to delete book with book ID {}".format(book_id))
-          finally:
-            input("Press Enter to continue")
+          [book_id]=get_param({"Book ID":str},"\nSupply Book ID")
+          delete_book(client, book_id)
 
-    #TODO: Manage Users
+    #Manage Users
     elif main_option==6:
       while True:
         option = show_menu([
@@ -320,16 +325,89 @@ def start_cli(client):
 
         #Add user
         elif option==2:
-          pass
+          [name, user, phone] = get_param({
+            "Real Name":str,
+            "Username":str,
+            "Phone Number":str
+          }, "\nPlease enter user credentials")
+          new_user = {
+            "_id": None,
+            "loans":[],
+            "name":name,
+            "user":user,
+            "phone":phone
+          }
+          create_user(client, new_user)
 
         #Edit user
         elif option==3:
-          pass
+          [user_id]=get_param({"User ID":str},"\nSupply User ID")
+          user = get_one_user(client, user_id)
+          if user==None:
+            continue
+          #Create editing copy
+          new_user = copy.deepcopy(user)
+          while True:
+            edit_option=show_menu([
+              "Discard changes & Return",
+              "Commit changes & Return",
+              "Edit Name",
+              "Edit Username",
+              "Edit Phone",
+            ])
+            #Discard changes
+            if edit_option==1:
+              print("Exiting editor mode")
+              break
+
+            #Commit changes
+            elif edit_option==2:
+              update_user(client, user, new_user)
+              print("Exiting editor mode")
+              break
+            
+            elif edit_option in range(3,6):
+              editing = ["name", "username", "phone"]
+              fields = ["name", "user", "phone"]
+              edit_field = editing[edit_option-3]
+              field = fields[edit_option-3]
+              try:
+                if field not in new_user.keys():
+                  new_user[field]=''
+                [response] = get_param({"New {}".format(edit_field):str}, "\nSupply new {0}".format(edit_field))
+                if str(input("Confirm changing {0} from '{1}' to '{2}'? (y/n): ".format(
+                  edit_field,
+                  new_user[field],
+                  response
+                ))).lower() in AFFIRMATIVE:
+                  new_user[field] = response
+                  print("Successfully edited field of user")
+
+              finally:
+                input("Press Enter to continue")
 
         #Search users
         elif option==4:
-          pass
+          [name, username, num_results] = get_param({
+            "Name":str,
+            "Username":str,
+            "Number of results":int,
+          },"\nNew search")
+          num_results = num_results if num_results else 10
+          sort = show_menu([
+            "None",
+            "Name",
+            "Username",
+          ],"\nSort by")
+          direction=1
+          if sort!=1:
+            direction = show_menu([
+              "Ascending",
+              "Descending"
+            ], "\nSort in which direction")
+          get_users(client, name, username, num_results, sort, direction)
 
         #Remove user
         elif option==5:
-          pass
+          [user_id]=get_param({"User ID":str},"\nSupply User ID")
+          delete_user(client, user_id)
