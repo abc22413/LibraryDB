@@ -147,8 +147,9 @@ def start_cli(client):
 
         #Current Loans
         elif option==2:
-          pass
-
+          [user_id] = get_param({"User ID":str}, "\nSupply user ID")
+          cur_loans(client, user_id)
+          
         #Past Loans
         elif option==3:
           pass

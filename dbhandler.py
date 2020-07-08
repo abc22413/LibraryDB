@@ -4,9 +4,16 @@ import errors
 import secret
 import random
 import string
+import datetime
 from pymongo import *
 
+#Global variables
+LOAN_DURATION = 0
+MAX_LOANS = 7
+RENEW_DURATION = 0
+
 #Books
+#TODO: Implement incomplete book obj handling for get_books()
 def gen_new_bookID(bookobj):
   bookobj["_id"] = str(random.randint(1,99999)).zfill(5)+bookobj["authors"][0].replace(" ","")[:3].upper()
   return bookobj
@@ -48,6 +55,8 @@ def get_books(client, title, author, isbn, num_results, sort, direction):
     print("Title | Author(s) | Available{0}".format(
       " | # of pages" if sort==5 else (" | ISBN" if sort==4 else "")
     ))
+    '''
+    '''
     for book in results:
       print("{0} | {1} | {2}{3}".format(
         book["title"],
@@ -69,14 +78,22 @@ def detail_books(client, title, author, isbn):
       "authors":{"$elemMatch": {"$regex": author, "$options": "i"}},
       "isbn":{"$regex": isbn}
     })
+    display = {
+      "title":"\nTitle",
+      "authors":"Written by",
+      "avail":"Availability",
+      "pgs":"Length",
+      "isbn":"ISBN",
+      "_id":"Book ID"
+    }
     for book in results:
-      print("\nTitle: {}".format(book["title"]))
-      print("Written by: {}".format(", ".join([i for i in book["authors"]])))
-      print("Availability: {}".format("Available" if book["avail"] else "On Loan"))
-      print("Length: {} pages".format(book["pgs"]))
-      print("ISBN: {}".format(book["isbn"]))
-      print("Book ID: {}".format(book["_id"]))
-
+      for field in [i for i in display.keys() if i in book.keys()]:
+        if field=="authors":
+          print("Written by: {}".format(", ".join([i for i in book["authors"]])))
+        elif field=="avail":
+          print("Availability: {}".format("Available" if book["avail"] else "On Loan"))
+        else:
+          print("{0}: {1}".format(display[field], book[field]))
     print("\nPlease take note of Book ID for borrowing")
 
   except:
@@ -112,7 +129,7 @@ def update_book(client, old, new):
       #remove attribute functionalty
       insert = {}
       for key in new.keys():
-        if new[key] not in ['', None, []]:
+        if new[key] not in ['', None]:
           insert[key] = new[key]
       client.Library.Books.find_one_and_replace({"_id":insert["_id"]},insert)
       print("Successfully modified")
@@ -160,12 +177,13 @@ def get_users(client, name, username, num_results, sort, direction):
       "user":{"$regex": username, "$options":"i"}
     },{"loans":0}).limit(num_results).sort(sorting[sort-1], 1 if direction==1 else -1)
     print("Name | Username | Phone")
+    display = ["name", "user", "phone"]
     for user in results:
-      print("{0} | {1} | {2}".format(
-        user["name"],
-        user["user"],
-        user["phone"]
-      ))
+      to_print=""
+      for field in [i for i in display if i in user.keys()]:
+        to_print+=str(user[field])
+        to_print+=" | "
+      print(to_print)
 
   except:
     print("Search failed")
@@ -221,9 +239,29 @@ def delete_user(client, del_id):
 #Loans
 def new_loan(client):
   pass
+#TODO:
+def cur_loans(client, user_id):
+  try:
+    user = client.Library.Users.find_one({"_id":user_id}, {
+      "_id":1,
+      "name":1,
+      "loans":1
+    })
+    print("User ID: {0}".format(user["_id"]))
+    if "name" in user.keys():
+      print("Name: {0}".format(user["name"]))
+    for loan in user["loans"]:
+      pass
+  except:
+    print("Failed to retrieve current loans")
+  finally:
+    input("Press Enter to continue")
 
-def cur_loans(client):
-  pass
+  except:
+    print("Could not retrieve current loans")
+
+  finally:
+    input("Press Enter to continue")
 
 def renew_loan(client):
   pass
