@@ -11,7 +11,7 @@ from errors import *
 #Global variables
 LOAN_DURATION = datetime.timedelta(days=27)
 MAX_LOANS = 7
-RENEW_DURATION = 0
+RENEW_DURATION = LOAN_DURATION
 
 #Books
 def gen_new_bookID(bookobj):
@@ -237,6 +237,7 @@ def delete_user(client, del_id):
     input("Press Enter to continue")
 
 #Loans
+#TODO: Show overdue and prevent borrowing & renewal
 def new_loan(client, user_id, book_id):
   new_loan = {
     "book_id": book_id,
@@ -290,7 +291,8 @@ def cur_loans(client, user_id, to_return=False):
         "_id":1,
         "title":1,
       })
-      print("\nBook ID: {0}".format(book["_id"]))
+      print("\n{0}".format("OVERDUE" if datetime.datetime.utcnow()>loan["due"] else ""))
+      print("Book ID: {0}".format(book["_id"]))
       print("Title: {0}".format(book["title"] if "title" in book.keys() else "No Title"))
       print("Date issued: {0}".format(loan["start"]))
       print("Due Date: {0}".format(loan["due"]))
@@ -308,9 +310,26 @@ def cur_loans(client, user_id, to_return=False):
     input("Press Enter to continue")
 
 def renew_loan(client, user_id, book_id):
-  print("LOAN RENEWAL")
+  try:
+    loans = client.Library.Users.find_one({"_id": user_id}, {"_id":0, "loans":1})["loans"]
+    [loan] = [i for i in loans if i["book_id"]==book_id]
+    if loan["renew"]==True:
+      raise AlreadyRenewed
+    loan["due"] += RENEW_DURATION
+    loan["renew"]=True
+    client.Library.Users.update_one(
+      {"_id": user_id},
+      {
+        "$set": {"loans.$[element]": loan},
+      },
+      array_filters=[{"element.book_id": book_id}]
+    )
+  except:
+    print("Failed to renew loan")
+  finally:
+    input("Press Enter to continue")
 
-def return_loan(client):
+def return_loan(client, user_id, book_id):
   pass
 
 def past_loans(client, user_id):

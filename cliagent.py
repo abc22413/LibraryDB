@@ -172,6 +172,9 @@ def start_cli(client):
 
         #Borrow Book(s)
         elif option==2:
+          [user_id] = get_param({
+                "Your user ID":str,
+              }, "\nSupply your user ID")
           while True:
             borrow_option = show_menu([
               "Return to previous",
@@ -180,10 +183,9 @@ def start_cli(client):
             if borrow_option==1:
               break
             elif borrow_option==2:
-              [user_id, book_id] = get_param({
-                "Your user ID":str,
+              [book_id] = get_param({
                 "Book ID to borrow":str
-              }, "\nSupply your user ID and book ID")
+              }, "\nSupply the book ID of the book you wish to borrow")
               new_loan(client, user_id, book_id)
 
         #Renew Book(s)

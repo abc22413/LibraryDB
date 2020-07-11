@@ -24,6 +24,16 @@ class BookNotAvail(Error):
     """
     pass
 
+class AlreadyRenewed(Error):
+    """Raised if intended book is already renewed once
+    """
+    pass
+
+class BookIsOverdue(Error):
+    """Raised if intended book is already renewed once
+    """
+    pass
+
 class ObjNotHaveAttr(Error):
     '''Raised when mongoDB object does not have requested field for editing
     '''
