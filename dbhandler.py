@@ -6,14 +6,14 @@ import random
 import string
 import datetime
 from pymongo import *
+from errors import *
 
 #Global variables
-LOAN_DURATION = 0
+LOAN_DURATION = datetime.timedelta(days=27)
 MAX_LOANS = 7
 RENEW_DURATION = 0
 
 #Books
-#TODO: Implement incomplete book obj handling for get_books()
 def gen_new_bookID(bookobj):
   bookobj["_id"] = str(random.randint(1,99999)).zfill(5)+bookobj["authors"][0].replace(" ","")[:3].upper()
   return bookobj
@@ -59,10 +59,10 @@ def get_books(client, title, author, isbn, num_results, sort, direction):
     '''
     for book in results:
       print("{0} | {1} | {2}{3}".format(
-        book["title"],
-        ", ".join([i for i in book["authors"]]),
+        book["title"] if "title" in book.keys() else "No Title",
+        ", ".join([i for i in book["authors"]]) if "authors" in book.keys() else "No Author(s)",
         "Available" if book["avail"] else "On Loan",
-        " | {0} pages".format(book["pgs"]) if sort==5 else (" | "+book["isbn"] if sort==4 else "")
+        " | {0} pages".format(book["pgs"]) if sort==5 and "pgs" in book.keys() else (" | "+book["isbn"] if sort==4 and "isbn" in book.keys() else "")
       ))
 
   except:
@@ -237,10 +237,42 @@ def delete_user(client, del_id):
     input("Press Enter to continue")
 
 #Loans
-def new_loan(client):
-  pass
+def new_loan(client, user_id, book_id):
+  new_loan = {
+    "book_id": book_id,
+    "start": datetime.datetime.utcnow(),
+    "due": datetime.datetime.utcnow()+LOAN_DURATION,
+    "renew": False
+  }
+  try:
+    user = client.Library.Users.find_one({"_id": user_id}, {"_id":0, "loan_num":1})
+    if user["loan_num"]>=MAX_LOANS:
+      print("User has too many loans")
+      raise TooManyLoans
+    book = client.Library.Books.find_one({"_id":book_id}, {"_id":0, "avail":1})
+    if not book["avail"]:
+      print("Book not available for borrowing")
+      raise BookNotAvail
+    client.Library.Users.update_one({"_id": user_id}, {
+      "$push":{
+        "loans": new_loan
+      },
+      "$inc":{
+        "loan_num": 1
+      }
+    })
+    client.Library.Books.update_one({"_id": book_id}, {
+      "$set":{
+        "avail":False
+      }
+    })
+    print("Succesfully borrowed book")
+  except:
+    print("Failed to process book borrowing")
+  finally:
+    input("Press Enter to continue")
 #TODO:
-def cur_loans(client, user_id):
+def cur_loans(client, user_id, to_return=False):
   try:
     user = client.Library.Users.find_one({"_id":user_id}, {
       "_id":1,
@@ -250,24 +282,36 @@ def cur_loans(client, user_id):
     print("User ID: {0}".format(user["_id"]))
     if "name" in user.keys():
       print("Name: {0}".format(user["name"]))
+    #Only if to return
+    if to_return:
+      return_obj=[]
     for loan in user["loans"]:
-      pass
+      book = client.Library.Books.find_one({"_id": loan["book_id"]}, {
+        "_id":1,
+        "title":1,
+      })
+      print("\nBook ID: {0}".format(book["_id"]))
+      print("Title: {0}".format(book["title"] if "title" in book.keys() else "No Title"))
+      print("Date issued: {0}".format(loan["start"]))
+      print("Due Date: {0}".format(loan["due"]))
+      print("Renewed" if loan["renew"] else "Not Renewed")
+
+      if to_return:
+        return_obj.append(book)
+
+    if to_return:
+      return return_obj
+    
   except:
     print("Failed to retrieve current loans")
   finally:
     input("Press Enter to continue")
 
-  except:
-    print("Could not retrieve current loans")
-
-  finally:
-    input("Press Enter to continue")
-
-def renew_loan(client):
-  pass
+def renew_loan(client, user_id, book_id):
+  print("LOAN RENEWAL")
 
 def return_loan(client):
   pass
 
-def past_loans(client):
+def past_loans(client, user_id):
   pass

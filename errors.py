@@ -14,6 +14,16 @@ class DBConnectionError(Error):
     """
     pass
 
+class TooManyLoans(Error):
+    """Raised when user already has too many loans
+    """
+    pass
+
+class BookNotAvail(Error):
+    """Raised when book user intends to borrow is not available
+    """
+    pass
+
 class ObjNotHaveAttr(Error):
     '''Raised when mongoDB object does not have requested field for editing
     '''

@@ -152,7 +152,8 @@ def start_cli(client):
           
         #Past Loans
         elif option==3:
-          pass
+          [user_id] = get_param({"User ID":str}, "\nSupply user ID")
+          past_loans(client, user_id)
 
     #TODO: Manage Loans
     elif main_option==4:
@@ -171,11 +172,38 @@ def start_cli(client):
 
         #Borrow Book(s)
         elif option==2:
-          pass
+          while True:
+            borrow_option = show_menu([
+              "Return to previous",
+              "Borrow a(nother) book"
+            ])
+            if borrow_option==1:
+              break
+            elif borrow_option==2:
+              [user_id, book_id] = get_param({
+                "Your user ID":str,
+                "Book ID to borrow":str
+              }, "\nSupply your user ID and book ID")
+              new_loan(client, user_id, book_id)
 
         #Renew Book(s)
         elif option==3:
-          pass
+          try:
+            [user_id] = get_param({
+              "User ID":str
+            }, "\nSupply your user ID")
+            books = cur_loans(client, user_id, True)
+            #Choose which book to renew if at all
+            while True:
+              renew_option = show_menu([
+                "Return to previous",
+              ]+["Renew "+book["title"] for book in books])
+              if renew_option==1:
+                break
+              elif renew_option in range(2,2+len(books)):
+                renew_loan(client, user_id, books[renew_option-2]["_id"])
+          except:
+            pass
 
         #Return Book(s)
         elif option==4:
@@ -333,6 +361,7 @@ def start_cli(client):
           }, "\nPlease enter user credentials")
           new_user = {
             "_id": None,
+            "loan_num": 0,
             "loans":[],
             "name":name,
             "user":user,
