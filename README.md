@@ -1,8 +1,8 @@
-Usage:-
+Usage:
 Please run main.py
 Command Line Interface is pretty self-explanatory
 
-Populating Books DB:-
+Populating Books DB:
 The DB link is supplied.
 If however, you wish to make your own please do the following
 - Create DB named Library
