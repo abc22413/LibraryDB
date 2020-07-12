@@ -10,7 +10,7 @@ The DB link is supplied.If however, you wish to make your own please do the foll
 - Add collection Books
 
 To populate Books insert data/data.json. Else, you may run data/data.py which uses data/data.csv
-Don't forget to update username and password in '''secret.py'''
+Don't forget to update username and password in secret.py
 
-## ## License
-[Apache 2.0](https://choosealicense.com/licenses/apache-2.0/)
+## License
+[Apache 2.0 License](https://choosealicense.com/licenses/apache-2.0/)
