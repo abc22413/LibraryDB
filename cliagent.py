@@ -5,14 +5,16 @@ from datetime import datetime
 import time
 import copy
 
-#Commands which indicate yes for "y/n" prompts
+#Responses which indicate yes for "y/n" prompts
 AFFIRMATIVE = ["y","yes","yeah","sure","yep","yup","ye","ya",""]
 
 def show_welcome():
+  #Show welcome message
   print("\n\n\nWELCOME TO ABC LIBRARY")
   print("Current Time {0}".format(datetime.now().strftime("%d %B %Y %H:%M:%S")))
 
 def show_menu(options, command="\n\n\nChoose an option below"):
+  #Show a menu with options specified by options
   print(command)
   for x in options:
     print("{0}) {1}".format(
@@ -24,7 +26,7 @@ def show_menu(options, command="\n\n\nChoose an option below"):
   while True:
     try:
       option = int(input("Option: "))
-      #If selected option out of range shown by the menu
+      #If selected option is out of range shown by the menu
       if option not in [i for i in range(1,len(options)+1)]:
         raise OptionOutOfRange
       break
@@ -37,32 +39,41 @@ def show_menu(options, command="\n\n\nChoose an option below"):
   return option
 
 def get_param(options, command="\nPlease supply the following"):
+  #Show prompt to get values for variables specified in options
   results=[]
   print(command)
   for option in options.keys():
     while True:
+      #If variable is str type
       if options[option]==str:
         try:
+          #temp is temporary variable for storing response
           temp=""
           temp = str(input("{}: ".format(option)))
           results.append(temp)
           break
         except:
+          #Accept blank responses
           if temp=="":
             results.append(temp)
             break
+          #Handle exception not related to response
           else:
             print("Please input a string for {}".format(option))
+      #For int type variable
       elif options[option]==int:
         try:
+          #temp is temporary variable to store response
           temp = None
           temp = int(input("{}: ".format(option)))
           results.append(temp)
           break
         except:
+          #Accept blank response
           if temp==None:
             results.append(None)
             break
+          #Handle exception not related to blank response
           else:
             print("Please input an integer for {}".format(option))
   return results
@@ -73,6 +84,7 @@ def start_cli(client):
 
   #mainloop
   while True:
+    #Main option in program
     main_option = show_menu([
       "Quit",
       "Browse Books",
@@ -172,10 +184,12 @@ def start_cli(client):
 
         #Borrow Book(s)
         elif option==2:
+          #Enter user_id
           [user_id] = get_param({
                 "Your user ID":str,
               }, "\nSupply your user ID")
           while True:
+            #True loop allows multiple books to be borrowed without keying in user_id every time
             borrow_option = show_menu([
               "Return to previous",
               "Borrow a(nother) book"
@@ -190,30 +204,50 @@ def start_cli(client):
 
         #Renew Book(s)
         elif option==3:
-          try:
-            [user_id] = get_param({
-              "User ID":str
-            }, "\nSupply your user ID")
-            books = cur_loans(client, user_id, True)
-            #Choose which book to renew if at all
-            while True:
-              renew_option = show_menu([
-                "Return to previous",
-              ]+["Renew "+book["title"] for book in books])
-              if renew_option==1:
-                break
-              elif renew_option in range(2,2+len(books)):
-                renew_loan(client, user_id, books[renew_option-2]["_id"])
-          except:
-            pass
+          [user_id] = get_param({
+            "User ID":str
+          }, "\nSupply your user ID")
+          books = cur_loans(client, user_id, True)
+          #Handle if no books were returned
+          if not books:
+            print("No current loans were returned. Have you borrowed anything yet?")
+            continue
+          #Choose which book to renew if at all
+          while True:
+            renew_option = show_menu([
+              "Return to previous",
+            ]+["Renew "+book["title"] for book in books])
+            if renew_option==1:
+              break
+            elif renew_option in range(2,2+len(books)):
+              renew_loan(client, user_id, books[renew_option-2]["_id"])
 
         #Return Book(s)
         elif option==4:
-          pass
+          [user_id] = get_param({
+            "User ID":str
+          }, "\nSupply your user ID")
+          books = cur_loans(client, user_id, True)
+          #Handle if no books were returned
+          if not books:
+            print("No current loans were returned. Have you borrowed anything yet?")
+            continue
+          #Choose which book to return if at all
+          while True:
+            return_option = show_menu([
+              "Return to previous",
+            ]+["Return "+book["title"] for book in books])
+            if return_option==1:
+              break
+            elif return_option in range(2,2+len(books)):
+              return_loan(client, user_id, books[return_option-2]["_id"])
 
         #Check book loaner
         elif option==5:
-          pass
+          [book_id] = get_param({
+            "Book ID":str
+          }, "\nSupply ID of book you wish to investigate")
+          find_loaner(client, book_id)
 
     #Manage Books
     elif main_option==5:
