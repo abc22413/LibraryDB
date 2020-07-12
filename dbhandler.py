@@ -1,12 +1,10 @@
 #Handle MongoDB backend queries, searches, sorts
 import dns
-import errors
-import secret
+from pymongo import *
+from errors import *
 import random
 import string
 import datetime
-from pymongo import *
-from errors import *
 
 #Global variables
 LOAN_DURATION = datetime.timedelta(days=27)
@@ -191,6 +189,7 @@ def create_user(client, new_user):
     input("Press Enter to continue")
 
 def get_users(client, name, username, num_results, sort, direction):
+  #Search and return multiple users
   sorting = ["_id","name","user"]
   try:
     results = client.Library.Users.find({
@@ -213,6 +212,7 @@ def get_users(client, name, username, num_results, sort, direction):
     input("Press Enter to continue")
 
 def get_one_user(client, user_id):
+  #Retrieve and display details of 1 specific user
   try:
     user = client.Library.Users.find_one({"_id":user_id})
     display = {
@@ -231,8 +231,9 @@ def get_one_user(client, user_id):
 
 def update_user(client, old, new):
   try:
+    #Only update if changes were made
     if old!=new:
-      #Remove attributes functionality
+      #Remove attributes if empty
       insert = {}
       for key in new.keys():
         if new[key] not in ['', None]:
@@ -247,6 +248,7 @@ def update_user(client, old, new):
     input("Press Enter to continue")
 
 def delete_user(client, del_id):
+  #Delete user by ID
   try:
     client.Library.Users.delete_one({"_id":del_id})
     print("Successfully deleted user with User ID {}".format(del_id))
@@ -258,7 +260,6 @@ def delete_user(client, del_id):
     input("Press Enter to continue")
 
 #Loans
-#TODO: Show overdue and prevent borrowing & renewal
 def new_loan(client, user_id, book_id):
   #New loan object
   new_loan = {
@@ -298,8 +299,9 @@ def new_loan(client, user_id, book_id):
     print("Failed to process book borrowing")
   finally:
     input("Press Enter to continue")
-#TODO:
+
 def cur_loans(client, user_id, to_return=False):
+  #Retrieve and display a user's current loans
   try:
     user = client.Library.Users.find_one({"_id":user_id}, {
       "_id":1,
@@ -317,6 +319,7 @@ def cur_loans(client, user_id, to_return=False):
         "_id":1,
         "title":1,
       })
+      #Show OVERDUE flag if overdue
       print("\n{0}".format("OVERDUE" if datetime.datetime.utcnow()>loan["due"] else ""))
       print("Book ID: {0}".format(book["_id"]))
       print("Title: {0}".format(book["title"] if "title" in book.keys() else "No Title"))
@@ -362,6 +365,7 @@ def renew_loan(client, user_id, book_id):
 
 def return_loan(client, user_id, book_id):
   try:
+    success=False
     #Retrieve loan
     loans = client.Library.Users.find_one({"_id": user_id}, {
       "_id":0,
@@ -386,15 +390,18 @@ def return_loan(client, user_id, book_id):
     #Modify loan object to prepare for archival
     loan["return"] = datetime.datetime.utcnow()
     loan["user_id"] = user_id
-    #Push to loans DB meant for past loans
+    #Push to loans DB meant for past loans archival
     client.Library.Loans.insert_one(loan)
+    success=True
     print("Successfully returned book")
   except:
     print("Could not return loan")
   finally:
     input("Press Enter to continue")
+    return success
 
 def find_loaner(client, book_id):
+  #Find who borrowed a specific book
   try:
     user = client.Library.Users.find_one({
       "loans":{"$elemMatch": {"book_id": book_id}}
@@ -411,5 +418,22 @@ def find_loaner(client, book_id):
   finally:
     input("Press Enter to continue")
 
-def past_loans(client, user_id):
-  pass
+def past_loans(client, user_id, num_results):
+  #Retrieve and display a user's past loans
+  try:
+    loans = client.Library.Loans.find({"user_id":user_id}).limit(num_results).sort("start", 1)
+    for loan in loans:
+      book = client.Library.Books.find_one({
+        "_id":loan["book_id"]
+      },{
+        "_id":0,
+        "title":1
+      })
+      print("\nBook Title: {0}".format(book["title"]))
+      print("Start: {0}".format(loan["start"]))
+      print("Returned: {0}".format(loan["return"]))
+      print("Was renewed" if loan["renew"] else "Was not renewed")
+  except:
+    print("Failed to retrieve past loans")
+  finally:
+    input("Press Enter to continue")

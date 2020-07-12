@@ -6,7 +6,7 @@ import time
 import copy
 
 #Responses which indicate yes for "y/n" prompts
-AFFIRMATIVE = ["y","yes","yeah","sure","yep","yup","ye","ya",""]
+AFFIRMATIVE = ["y","yes","yeah","yah","yep","yup","ye","ya",""]
 
 def show_welcome():
   #Show welcome message
@@ -144,7 +144,7 @@ def start_cli(client):
           },"\nFind book details")
           detail_books(client, title, author, isbn)
 
-    #TODO: Check Loans
+    #Check Loans
     elif main_option==3:
       while True:
         option = show_menu([
@@ -164,10 +164,15 @@ def start_cli(client):
           
         #Past Loans
         elif option==3:
-          [user_id] = get_param({"User ID":str}, "\nSupply user ID")
-          past_loans(client, user_id)
+          [user_id, num_results] = get_param({
+            "User ID":str,
+            "Number of results":int
+          })
+          if not num_results:
+            num_results=20
+          past_loans(client, user_id, num_results)
 
-    #TODO: Manage Loans
+    #Manage Loans
     elif main_option==4:
       while True:
         option = show_menu([
@@ -240,7 +245,8 @@ def start_cli(client):
             if return_option==1:
               break
             elif return_option in range(2,2+len(books)):
-              return_loan(client, user_id, books[return_option-2]["_id"])
+              if return_loan(client, user_id, books[return_option-2]["_id"]):
+                books = [i for i in books if i!=books[return_option-2]]
 
         #Check book loaner
         elif option==5:
@@ -293,7 +299,7 @@ def start_cli(client):
           book = get_one_book(client, book_id)
           if book==None:
             continue
-          #Create editing copy
+          #Create local editing copy
           new_book = copy.deepcopy(book)
           while True:
             edit_option=show_menu([
@@ -411,7 +417,7 @@ def start_cli(client):
           user = get_one_user(client, user_id)
           if user==None:
             continue
-          #Create editing copy
+          #Create local editing copy
           new_user = copy.deepcopy(user)
           while True:
             edit_option=show_menu([
