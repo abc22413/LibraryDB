@@ -1,3 +1,6 @@
+## Description
+Simple CLI-based library manager and browser with MongoDB backend integration
+
 ## Usage
 Please run main.py. Command Line Interface is self-explanatory (hopefully).
 
